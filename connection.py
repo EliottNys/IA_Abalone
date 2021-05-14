@@ -13,7 +13,7 @@ def SendServer(port, msg):                        #sends message converted to js
 
 def identity():             #fetches port and name from the arguments (command line)
     ClientPort = 3001           #Default
-    ClientName = "IAbalone"     #Default
+    ClientName = "Eliott&Matthis"     #Default
     args = sys.argv[1:]
     for arg in args:
         if arg.startswith('name='):
@@ -39,11 +39,14 @@ def ProcessRequest(request, client, port):          #détermine ce qu'il faut r�
         return False
     if request["request"] == "play":
         move = next(request["state"])
-        #print(move)
+        messages = ("Bien joué!", "Pas mal ;)", "Tu us fort!", "Pas facile comme partie...",
+        "Je suis content de marcher!", "Maman, je passe à la télé!","","","","","","","","",
+        "","","","","","","","","","","","","","","","","","","","","","","","","","","","",
+        "","","","","","","","","","","","","","","","","","","","","","","","","","","","")
         response = {
             "response": "move",
             "move": move,
-            "message": "Fun message"
+            "message": random.choice(messages)
             }
         msg = json.dumps(response).encode('utf8')
         client.send(msg)
@@ -59,7 +62,6 @@ def listenForRequests(port):        #boucle qui écoute le serveur
             s.listen()
             while not finished:
                 client, address = s.accept()
-                print(address)
                 request = json.loads(client.recv(4096).decode('utf8'))
                 print(request)
                 finished = ProcessRequest(request, client, port)
