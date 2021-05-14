@@ -39,7 +39,7 @@ def ProcessRequest(request, client, port):          #d√©termine ce qu'il faut r√
         return False
     if request["request"] == "play":
         move = next(request["state"])
-        print(move)
+        #print(move)
         response = {
             "response": "move",
             "move": move,
