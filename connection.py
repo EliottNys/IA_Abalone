@@ -1,7 +1,8 @@
 import sys
 import json
 import socket
-
+from IA import next
+import random
 
 def SendServer(port, msg):                        #sends message converted to json and encoded to the server
     s = socket.socket()
@@ -30,19 +31,26 @@ def subscribe(ClientPort, ClientName):          #connects to the server
     }
     SendServer(ClientPort, msg)
 
-def ProcessRequest(request, client, port):
+def ProcessRequest(request, client, port):          #détermine ce qu'il faut répondre en fonction du type de requête
     if request["request"] == "ping":
         response = {"response": "pong"}
         msg = json.dumps(response).encode('utf8')
         client.send(msg)
         return False
     if request["request"] == "play":
-        response = Move(request)
+        move = next(request["state"])
+        print(move)
+        response = {
+            "response": "move",
+            "move": move,
+            "message": "Fun message"
+            }
+        msg = json.dumps(response).encode('utf8')
         client.send(msg)
         return False
     return True
 
-def listenForRequests(port):
+def listenForRequests(port):        #boucle qui écoute le serveur
     while True:
         finished = False
         request=""
@@ -53,7 +61,8 @@ def listenForRequests(port):
                 client, address = s.accept()
                 print(address)
                 request = json.loads(client.recv(4096).decode('utf8'))
-                finished = ProcessRequest(ask, client, port)
+                print(request)
+                finished = ProcessRequest(request, client, port)
 
 
 def start(ClientPort, ClientName):              #starts the program
