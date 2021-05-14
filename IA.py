@@ -1,10 +1,8 @@
-from collections import defaultdict
 import random
 import copy
-from typing import no_type_check_decorator
 
 #---------------------- légendes ----------------------
-
+print
 symbols = ['B', 'W']
 
 def opponent(color):		#inverse la couleur
@@ -31,15 +29,15 @@ opposite = {
 }
 
 posValues = [        #tableau de valorisation des postions sur le plateau
-    [0.1, 0.1, 0.1, 0.1, 0.1, "X", "X", "X", "X"],
-    [0.1, 1.0, 1.0, 1.0, 1.0, 0.1, "X", "X", "X"],
-    [0.1, 1.0, 1.5, 1.5, 1.5, 1.0, 0.1, "X", "X"],
-    [0.1, 1.0, 1.5, 1.85, 1.85, 1.5, 1.0, 0.1, "X"],
-    [0.1, 1.0, 1.5, 1.85, 2, 1.85, 1.5, 1.0, 0.1],
-    ["X", 0.1, 1.0, 1.5, 1.85, 1.85, 1.5, 1.0, 0.1],
-    ["X", "X", 0.1, 1.0, 1.5, 1.5, 1.5, 1.0, 0.1],
-    ["X", "X", "X", 0.1, 1.0, 1.0, 1.0, 1.0, 0.1],
-    ["X", "X", "X", "X", 0.1, 0.1, 0.1, 0.1, 0.1]
+    [1.6, 1.6, 1.6, 1.6, 1.6, "X", "X", "X", "X"],
+    [1.6, 2.5, 2.5, 2.5, 2.5, 1.6, "X", "X", "X"],
+    [1.6, 2.5, 3.0, 3.0, 3.0, 2.5, 1.6, "X", "X"],
+    [1.6, 2.5, 3.0, 3.35, 3.35, 3.0, 2.5, 1.6, "X"],
+    [1.6, 2.5, 3.0, 3.35, 3.5, 3.35, 3.0, 2.5, 1.6],
+    ["X", 1.6, 2.5, 3.0, 3.35, 3.35, 3.0, 2.5, 1.6],
+    ["X", "X", 1.6, 2.5, 3.0, 3.0, 3.0, 2.5, 1.6],
+    ["X", "X", "X", 1.6, 2.5, 2.5, 2.5, 2.5, 1.6],
+    ["X", "X", "X", "X", 1.6, 1.6, 1.6, 1.6, 1.6]
 ]
 
 #---------------------- fonctions basiques ----------------------
@@ -83,10 +81,10 @@ def utility(state):     #utilité d'un noeud final
     player = symbols[state["current"]]
     winner = winner(state)
     if player == winner:
-        return 55
+        return 25
     if winner == None:
         return 0
-    return -55
+    return -25
 
 def heuristic(state):       #heuristique (écart de points avec l'adversaire en fonction des positions sur le plateau)
     player = state["current"]
@@ -264,18 +262,29 @@ def moves(state):       #renvoie les coups possibles
     freePos = positions(state,"E")
     posOut = positions(state,"X")
     res = []
-    res.extend(MoveOne(pos, freePos))
-    res.extend(MoveTwo(TwoAlign(pos), freePos))
-    res.extend(MoveThree(ThreeAlign(pos), freePos))
-    res.extend(TwoPushOne(TwoAlign(pos), posAdv, freePos, posOut))
-    res.extend(ThreePushOne(ThreeAlign(pos), posAdv, freePos, posOut))
-    res.extend(ThreePushTwo(ThreeAlign(pos), posAdv, freePos, posOut))
-    random.shuffle(res)
+    one = MoveOne(pos, freePos)
+    random.shuffle(one)
+    res.extend(one)
+    two = MoveTwo(TwoAlign(pos), freePos)
+    random.shuffle(two)
+    res.extend(two)
+    three = MoveThree(ThreeAlign(pos), freePos)
+    random.shuffle(three)
+    res.extend(three)
+    twoone = TwoPushOne(TwoAlign(pos), posAdv, freePos, posOut)
+    random.shuffle(twoone)
+    res.extend(twoone)
+    threeone = ThreePushOne(ThreeAlign(pos), posAdv, freePos, posOut)
+    random.shuffle(threeone)
+    res.extend(threeone)
+    threetwo = ThreePushTwo(ThreeAlign(pos), posAdv, freePos, posOut)
+    random.shuffle(threetwo)
+    res.extend(threetwo)
     return res
 
 #---------------------- Applique un coup au plateau de jeu ----------------------
 
-def moveOneMarble(state, pos, direction):		#met à jour l'état après le déplacement d'un marble dans une case vide
+def moveOneMarble(state, pos, direction):		#met à jour l'état après le déplacement d'un pion dans une case vide
 	li, ci = pos			#"ligne initiale" et "colonne initiale"
 	ld, cd = newPos(pos, direction)
 	color = getStatus(state, pos)
@@ -295,12 +304,12 @@ def moveOneMarble(state, pos, direction):		#met à jour l'état après le dépla
 
 	return res
 
-def moveMarbles(state, marbles, direction):		#met à jour l'état après le déplacement de plusieurs marbles dans une case vide
+def moveMarbles(state, marbles, direction):		#met à jour l'état après le déplacement de plusieurs pions dans une case vide
 	for pos in marbles:
 		state = moveOneMarble(state, pos, direction)
 	return state
 
-def moveMarblesTrain(state, marbles, direction):		#met à jour l'état après avoir poussé des marbles adverses
+def moveMarblesTrain(state, marbles, direction):		#met à jour l'état après avoir poussé des pions adverses
 	if direction in ['E', 'SE', 'SW']:
 		marbles = sorted(marbles, key=lambda L: -(L[0]*9+L[1]))
 	else:
@@ -318,7 +327,7 @@ def moveMarblesTrain(state, marbles, direction):		#met à jour l'état après av
 
 	return state
 
-def apply(state, move):      #met à jour le plateau
+def apply(state, move):      #met à jour l'etat du jeu (plateau de jeu, tour...)
 
 		marbles = move['marbles']
 
@@ -337,111 +346,14 @@ def apply(state, move):      #met à jour le plateau
 
 #---------------------- Détermine le meilleur coup ----------------------
 
-
-
-#----------------------  ----------------------
-
-#def apply(state,move):
-#    res = state.copy()
-#    color = res["board"][move[0][0]]
-#    for marble in move[0]:
-#        res["board"][marble[0]][marble[1]] = "E"
-#    for marble in move[0]:
-#        new = newPos(marble, move[1])
-#        if state[new] == 
-#        res["board"][newPos(marble, move[1])] = color
-
-
-#----------------------  ----------------------
-
-def negamaxWithPruningIterativeDeepening(state, player, timeout=3):
-    cache = defaultdict(lambda : 0)
-    def cachedNegamaxWithPruningLimitedDepth(state, player, depth, alpha=float('-inf'), beta=float('inf')):
-        over = gameOver(state)
-        if over or depth == 0:
-            res = -heuristic(state, player), None, over
-        else:
-            theValue, theMove, theOver = float('-inf'), None, True
-            possibilities = [(move, apply(state, move)) for move in moves(state)]
-            for move, successor in reversed(possibilities):
-                value, _, over = cachedNegamaxWithPruningLimitedDepth(successor, player%2+1, depth-1, -beta, -alpha)
-                theOver = theOver and over
-                if value > theValue:            #on trouve un meilleur coup à jouer
-                    theValue, theMove = value, move
-                alpha = max(alpha, theValue)
-                if alpha >= beta:
-                    break
-            res = -theValue, theMove, theOver
-        cache[tuple(state)] = res[0]
-        return res
-
-def MAX(state):
-    if gameOver(state):
-        return utility(state), None
-    
-    theValue, theMove = float('-inf'), None
-    for move in moves(state):
-        mov = {"marbles":move[0],"direction":move[1]}
-        newState = apply(state, mov)
-        value, _ = MIN(newState)
-        if value > theValue:
-            theValue = value
-            theMove = mov
-    return theValue, theMove
-
-def MIN(state):
-    if gameOver(state):
-        return utility(state), None
-    
-    theValue, theMove = float('inf'), None
-    for move in moves(state):
-        mov = {"marbles":move[0],"direction":move[1]}
-        newState = apply(state, mov)
-        value, _ = MAX(newState)
-        if value < theValue:
-            theValue = value
-            theMove = mov
-    return theValue, theMove
-
-def negamax(state):
-    if gameOver(state):
-        return -utility(state), None
-    
-    theValue, theMove = float('-inf'), None
-    for move in moves(state):
-        mov = {"marbles":move[0],"direction":move[1]}
-        newState = apply(state, mov)
-        value, _ = negamax(newState)
-        if value > theValue:
-            theValue, theMove = value, mov
-    return -theValue, theMove
-
-def negamaxWithPruning(state, alpha=float('inf'), beta=float('+inf')):
-    if gameOver(state):
-        return -utility(state), None
-    
-    theValue, theMove = float('-inf'), None
-    for move in moves(state):
-        mov = {"marbles":move[0],"direction":move[1]}
-        newState = apply(state, mov)
-        value, _ = negamaxWithPruning(newState, -beta, -alpha)
-        if value > theValue:
-            theValue, theMove = value, mov
-        alpha = max(alpha, theValue)
-        if alpha >= beta:
-            break
-    return -theValue, theMove
-
-def negamaxWithPruningLimitedDepth(state, depth=2, alpha=float('-inf'), beta=float('+inf')):
+def NegamaxWithPruningLimitedDepth(state, depth=2, alpha=float('-inf'), beta=float('+inf')):
     if gameOver(state) or depth==0:
         return -heuristic(state), None
     theValue, theMove = float('-inf'), None
-    mvs = moves(state)
-    print(mvs)
-    for move in moves(state):
+    for move in reversed(moves(state)):
         mov = {"marbles":move[0],"direction":move[1]}
         newState = apply(state, mov)
-        value, _ = negamaxWithPruningLimitedDepth(newState, depth-1, -beta, -alpha)
+        value, _ = NegamaxWithPruningLimitedDepth(newState, depth-1, -beta, -alpha)
         if value > theValue:
             theValue, theMove = value, mov
         alpha = max(alpha, theValue)
@@ -449,6 +361,9 @@ def negamaxWithPruningLimitedDepth(state, depth=2, alpha=float('-inf'), beta=flo
             break
     return -theValue, theMove
 
-def next(state):
-    _, move = negamaxWithPruningLimitedDepth(state)
+
+#---------------------- Renvoie le coup ----------------------
+
+def next(state):        #renvoie le coup à jouer
+    _, move = NegamaxWithPruningLimitedDepth(state)
     return move
